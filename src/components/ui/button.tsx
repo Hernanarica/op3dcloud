@@ -19,12 +19,20 @@ const buttonVariants = cva(
 					"bg-secondary text-secondary-foreground shadow-xs hover:bg-secondary/80",
 				ghost: "hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50",
 				link: "text-primary underline-offset-4 hover:underline",
+				/** Acción secundaria sobre card blanca: relleno, sin borde. */
+				soft: "bg-secondary text-secondary-foreground hover:bg-secondary/70",
+				/** Sobre superficie invertida (el hero). Se invierte solo en
+				    oscuro porque usa tokens, no blanco/negro literales. */
+				inverse:
+					"bg-primary-foreground text-primary hover:bg-primary-foreground/90",
 			},
 			size: {
 				default: "h-9 px-4 py-2 has-[>svg]:px-3",
 				sm: "h-8 rounded-md gap-1.5 px-3 has-[>svg]:px-2.5",
 				lg: "h-10 rounded-md px-6 has-[>svg]:px-4",
 				icon: "size-9",
+				pill: "h-10 rounded-full px-5 has-[>svg]:px-4",
+				pillSm: "h-8 rounded-full gap-1.5 px-4 has-[>svg]:px-3",
 			},
 		},
 		defaultVariants: {

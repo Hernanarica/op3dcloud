@@ -1,6 +1,7 @@
 import { Box, ChevronDown, Download } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
 import {
 	Collapsible,
 	CollapsibleContent,
@@ -39,21 +40,14 @@ interface ModelGalleryProps {
  */
 export function ModelGallery({ patientId }: ModelGalleryProps) {
 	const { cases, isLoading } = usePatientModels(patientId);
-	const totalFiles = cases.reduce((sum, item) => sum + item.files.length, 0);
 
+	// El título y el contador los pone la `SectionCard` que lo envuelve.
 	return (
 		<div className="space-y-3">
-			<div className="flex items-baseline gap-2">
-				<h4 className="text-sm font-medium">Modelos 3D</h4>
-				<span className="text-xs text-muted-foreground">
-					{totalFiles}
-				</span>
-			</div>
-
 			{isLoading ? (
 				<div className="space-y-2">
-					<Skeleton className="h-14 rounded-xl" />
-					<Skeleton className="h-14 rounded-xl" />
+					<Skeleton className="h-[4.5rem] rounded-tile" />
+					<Skeleton className="h-[4.5rem] rounded-tile" />
 				</div>
 			) : cases.length === 0 ? (
 				<p className="text-sm text-muted-foreground">Sin modelos 3D</p>
@@ -94,17 +88,17 @@ function ModelCase({ modelCase }: { modelCase: PatientModelCase }) {
 		<Collapsible
 			open={open}
 			onOpenChange={handleOpenChange}
-			className="overflow-hidden rounded-xl border bg-card"
+			className="overflow-hidden rounded-tile bg-card shadow-e1"
 		>
-			<CollapsibleTrigger className="flex w-full items-center gap-3 p-3 text-left transition-[background-color,transform] duration-150 ease-out hover:bg-muted/50 active:scale-[0.99]">
-				<div className="rounded-md bg-brand-muted p-1.5">
-					<Box className="h-4 w-4 text-brand" />
-				</div>
+			<CollapsibleTrigger className="flex w-full items-center gap-3 p-4 text-left transition-[background-color,transform] duration-150 ease-out hover:bg-secondary/50 active:scale-[0.99]">
+				<span className="grid size-10 shrink-0 place-items-center rounded-tile bg-secondary text-foreground">
+					<Box className="size-4" />
+				</span>
 				<div className="min-w-0 flex-1">
-					<p className="truncate text-sm font-medium">
+					<p className="truncate text-[0.9375rem] font-medium">
 						Caso del {formatCaseDate(modelCase.createdAt)}
 					</p>
-					<p className="text-[11px] tracking-wide text-muted-foreground">
+					<p className="text-xs text-muted-foreground tabular-nums">
 						{modelCase.files.length}{" "}
 						{modelCase.files.length === 1 ? "archivo" : "archivos"}
 					</p>
@@ -144,20 +138,20 @@ function ModelFileRow({ path, url }: { path: string; url?: string }) {
 	const name = getFileName(path);
 
 	return (
-		<li className="flex items-center gap-3 px-3 py-2">
-			<Box className="h-4 w-4 shrink-0 text-muted-foreground" />
-			<span className="min-w-0 flex-1 truncate text-sm">{name}</span>
+		<li className="flex items-center gap-3 px-4 py-2.5">
+			<Box className="size-4 shrink-0 text-muted-foreground" />
+			<span className="min-w-0 flex-1 truncate font-mono text-xs">
+				{name}
+			</span>
 			{url ? (
-				<a
-					href={url}
-					download={name}
-					className="flex shrink-0 items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-brand transition-colors hover:bg-brand-muted"
-				>
-					<Download className="h-3.5 w-3.5" />
-					Descargar
-				</a>
+				<Button asChild variant="ghost" size="pillSm">
+					<a href={url} download={name}>
+						<Download className="size-3.5" />
+						Descargar
+					</a>
+				</Button>
 			) : (
-				<Skeleton className="h-6 w-24 shrink-0 rounded-md" />
+				<Skeleton className="h-8 w-28 shrink-0 rounded-full" />
 			)}
 		</li>
 	);
