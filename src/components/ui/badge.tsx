@@ -17,6 +17,9 @@ const badgeVariants = cva(
 					"border-transparent bg-destructive text-white [a&]:hover:bg-destructive/90 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40 dark:bg-destructive/60",
 				outline:
 					"text-foreground [a&]:hover:bg-accent [a&]:hover:text-accent-foreground",
+				/** Pastel sin borde. El color lo inyecta quien lo usa
+				    (ver `getCaseStatusClass`). */
+				soft: "border-transparent rounded-full bg-secondary text-secondary-foreground px-2.5",
 			},
 		},
 		defaultVariants: {

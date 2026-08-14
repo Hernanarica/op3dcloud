@@ -1,17 +1,8 @@
-import {
-	CheckCircle,
-	ClipboardList,
-	FolderOpen,
-	MessageSquareText,
-	ShieldAlert,
-	Stethoscope,
-	Target,
-	XCircle,
-} from "lucide-react";
+import { CheckCircle, XCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import type { PatientsRow } from "@/types/db/patients/patients";
-import { FieldChecklist, SectionCard } from "./case-ui";
+import { Eyebrow, FieldChecklist, SectionCard } from "./case-ui";
 import { FileGallery } from "./FileGallery";
 import { ModelGallery } from "./ModelGallery";
 
@@ -38,50 +29,44 @@ function toArray(v: unknown): string[] {
  * los 5 pasos de ese formulario para que sea reconocible.
  */
 export default function PatientDetail({ patient }: PatientDetailProps) {
+	const notes = patient.notes?.trim();
+	const observations = patient.observations_or_instructions?.trim();
+	const statusFiles = toArray(patient.status_files);
+
 	return (
-		<div className="space-y-3 pb-4">
+		<div className="space-y-4 pb-4 md:space-y-6">
 			{/* Pasos 1 a 4: en pantallas anchas entran de a dos por fila */}
-			<div className="grid items-start gap-3 xl:grid-cols-2">
+			<div className="grid items-start gap-4 md:gap-6 xl:grid-cols-2">
 				{/* Paso 1 del formulario */}
-				<SectionCard
-					step={1}
-					title="Datos iniciales del caso"
-					icon={ClipboardList}
-				>
-					<FieldValue
-						label="Tipo de Plan"
-						value={patient.type_of_plan}
-					/>
-					<FieldValue
-						label="Enfoque de Tratamiento"
-						value={patient.treatment_approach}
-					/>
+				<SectionCard step={1} title="Datos iniciales del caso">
+					<div className="grid gap-x-6 gap-y-5 sm:grid-cols-2">
+						<FieldValue
+							label="Tipo de plan"
+							value={patient.type_of_plan}
+						/>
+						<FieldValue
+							label="Enfoque de tratamiento"
+							value={patient.treatment_approach}
+						/>
+					</div>
 				</SectionCard>
 
 				{/* Paso 2 del formulario */}
-				<SectionCard
-					step={2}
-					title="Objetivos del tratamiento"
-					icon={Target}
-				>
+				<SectionCard step={2} title="Objetivos del tratamiento">
 					<FieldChecklist
-						label="Objetivo del Tratamiento"
+						label="Objetivo del tratamiento"
 						values={toArray(patient.treatment_objective)}
 					/>
 				</SectionCard>
 
 				{/* Paso 3 del formulario */}
-				<SectionCard
-					step={3}
-					title="Restricciones y limitaciones"
-					icon={ShieldAlert}
-				>
+				<SectionCard step={3} title="Restricciones y limitaciones">
 					<FieldChecklist
-						label="Restricciones Dentales"
+						label="Restricciones dentales"
 						values={toArray(patient.dental_restrictions)}
 					/>
 					<FieldChecklist
-						label="Limitaciones Declaradas"
+						label="Limitaciones declaradas"
 						values={toArray(patient.declared_limitations)}
 					/>
 				</SectionCard>
@@ -90,71 +75,79 @@ export default function PatientDetail({ patient }: PatientDetailProps) {
 				<SectionCard
 					step={4}
 					title="Aditamentos e instrucciones adicionales"
-					icon={Stethoscope}
 				>
 					<FieldChecklist
-						label="Recomendaciones y Acciones Sugeridas"
+						label="Recomendaciones y acciones sugeridas"
 						values={toArray(
 							patient.suggested_adminations_and_actions,
 						)}
 					/>
 					<FieldText
-						label="Observaciones o Instrucciones"
+						label="Observaciones o instrucciones"
 						text={patient.observations_or_instructions}
-						icon={MessageSquareText}
 					/>
 				</SectionCard>
 			</div>
 
-			{/* Paso 5 del formulario: a lo ancho, lleva las galerías */}
+			{/* Notas internas del caso: sólo si hay algo cargado */}
+			{(notes || observations) && (
+				<SectionCard title="Notas y observaciones">
+					{notes && <FieldText label="Notas" text={notes} />}
+					{observations && (
+						<FieldText
+							label="Instrucciones del caso"
+							text={observations}
+						/>
+					)}
+				</SectionCard>
+			)}
+
+			{/* Paso 5 del formulario. Antes anidaba las galerías dentro de otra
+			    card: eran tres niveles de superficie. */}
 			<SectionCard
 				step={5}
-				title="Documentación y declaración jurada"
-				icon={FolderOpen}
+				title="Documentación"
+				action={
+					statusFiles.length > 0 ? (
+						<Badge variant="soft">{statusFiles.join(" · ")}</Badge>
+					) : undefined
+				}
 			>
-				<div className="space-y-6">
-					<FileGallery
-						label="Fotos"
-						paths={toArray(patient.photos)}
-					/>
-					<FileGallery
-						label="Radiografías"
-						paths={toArray(patient.xrays)}
-					/>
-					<FileGallery
-						label="Escaneos"
-						paths={toArray(patient.scans)}
-					/>
-					<FileGallery
-						label="Documentación Complementaria"
-						paths={toArray(patient.supplementary_docs)}
-					/>
-					{/* Vienen de stl-render, no del formulario de creación */}
-					<ModelGallery patientId={patient.id} />
-				</div>
+				<FileGallery label="Fotos" paths={toArray(patient.photos)} />
+				<FileGallery
+					label="Radiografías"
+					paths={toArray(patient.xrays)}
+				/>
+				<FileGallery label="Escaneos" paths={toArray(patient.scans)} />
+				<FileGallery
+					label="Documentación complementaria"
+					paths={toArray(patient.supplementary_docs)}
+				/>
+			</SectionCard>
 
-				<div className="flex items-center justify-between gap-3 rounded-md border p-4">
-					<div className="space-y-0.5">
-						<p className="text-sm font-medium">
-							Declaración Jurada
-						</p>
-						<p className="text-xs text-muted-foreground">
-							El paciente declaró que la información consignada
-							reviste carácter de declaración jurada.
-						</p>
-					</div>
+			{/* Vienen de stl-render, no del formulario de creación */}
+			<SectionCard title="Modelos 3D">
+				<ModelGallery patientId={patient.id} />
+			</SectionCard>
+
+			<SectionCard title="Declaración jurada">
+				<div className="flex flex-wrap items-center justify-between gap-3 rounded-tile bg-secondary/60 p-4">
+					<p className="max-w-md text-sm leading-6 text-muted-foreground">
+						El paciente declaró que la información consignada
+						reviste carácter de declaración jurada.
+					</p>
 					{patient.sworn_declaration ? (
 						<Badge
-							variant="outline"
-							className="shrink-0 border-emerald-300 bg-emerald-50 text-emerald-800 dark:border-emerald-500/40 dark:bg-emerald-500/10 dark:text-emerald-200"
+							variant="soft"
+							className="shrink-0 bg-emerald-100 text-emerald-900 dark:bg-emerald-400/15 dark:text-emerald-200"
 						>
 							<CheckCircle className="size-3" />
 							Completada
 						</Badge>
 					) : (
 						<Badge
-							variant="outline"
-							className="shrink-0 border-amber-300 bg-amber-50 text-amber-800 dark:border-amber-500/40 dark:bg-amber-500/10 dark:text-amber-200"
+							variant="soft"
+							className="shrink-0 bg-amber-100 text-amber-900 dark:bg-amber-400/15 dark:text-amber-200"
 						>
 							<XCircle className="size-3" />
 							Pendiente
@@ -175,16 +168,16 @@ function FieldValue({
 	value: string | null | undefined;
 }) {
 	return (
-		<div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 border-b pb-2 last:border-b-0 last:pb-0">
-			<span className="text-sm text-muted-foreground">{label}</span>
-			<span
+		<div className="min-w-0 space-y-1.5">
+			<Eyebrow>{label}</Eyebrow>
+			<p
 				className={cn(
-					"text-sm font-medium",
+					"text-[0.9375rem] leading-6 font-medium",
 					!value && "font-normal text-muted-foreground",
 				)}
 			>
 				{value || "No especificado"}
-			</span>
+			</p>
 		</div>
 	);
 }
@@ -193,26 +186,22 @@ function FieldValue({
 function FieldText({
 	label,
 	text,
-	icon: Icon,
 }: {
 	label: string;
 	text: string | null | undefined;
-	icon: React.ElementType;
 }) {
 	return (
 		<div className="space-y-2">
-			<h4 className="flex items-center gap-2 text-sm font-medium">
-				<Icon className="h-4 w-4 text-muted-foreground" />
-				{label}
-			</h4>
-			<p
-				className={cn(
-					"text-sm leading-relaxed whitespace-pre-line",
-					!text && "text-muted-foreground",
-				)}
-			>
-				{text || "No especificado"}
-			</p>
+			<h4 className="text-sm font-medium">{label}</h4>
+			{text ? (
+				<p className="text-[0.9375rem] leading-7 whitespace-pre-line">
+					{text}
+				</p>
+			) : (
+				<p className="rounded-tile bg-secondary/60 p-4 text-sm text-muted-foreground">
+					No especificado
+				</p>
+			)}
 		</div>
 	);
 }

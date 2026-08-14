@@ -1,5 +1,6 @@
 import { ExternalLink, File, FileText, ImageIcon } from "lucide-react";
 import { useEffect, useState } from "react";
+import { Badge } from "@/components/ui/badge";
 import {
 	Dialog,
 	DialogContent,
@@ -8,6 +9,7 @@ import {
 } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getSignedUrl } from "@/services/supabase/storage.service";
+import { Eyebrow } from "./case-ui";
 
 const IMAGE_EXTS = new Set(["jpg", "jpeg", "png", "gif", "webp", "bmp", "svg"]);
 
@@ -53,8 +55,8 @@ export function FileGallery({ label, paths }: FileGalleryProps) {
 	return (
 		<div className="space-y-3">
 			<div className="flex items-baseline gap-2">
-				<h4 className="text-sm font-medium">{label}</h4>
-				<span className="text-xs text-muted-foreground">
+				<Eyebrow>{label}</Eyebrow>
+				<span className="text-xs text-muted-foreground tabular-nums">
 					{paths.length}
 				</span>
 			</div>
@@ -62,12 +64,12 @@ export function FileGallery({ label, paths }: FileGalleryProps) {
 			{paths.length === 0 ? (
 				<p className="text-sm text-muted-foreground">Sin archivos</p>
 			) : (
-				<div className="grid grid-cols-[repeat(auto-fill,minmax(160px,1fr))] gap-3">
+				<div className="grid grid-cols-[repeat(auto-fill,minmax(180px,1fr))] gap-4">
 					{loading
 						? paths.map((path) => (
 								<Skeleton
 									key={path}
-									className="h-50 rounded-xl"
+									className="h-56 rounded-tile"
 								/>
 							))
 						: paths.map((path) => {
@@ -80,26 +82,11 @@ export function FileGallery({ label, paths }: FileGalleryProps) {
 										key={path}
 										type="button"
 										onClick={() => setSelected(path)}
-										className="flex h-50 flex-col overflow-hidden rounded-xl border bg-card text-left shadow-sm transition duration-150 ease-out hover:-translate-y-0.5 hover:shadow-md active:translate-y-0 active:scale-[0.98]"
+										className="flex h-56 flex-col overflow-hidden rounded-tile bg-card text-left shadow-e1 transition-[transform,box-shadow] duration-200 ease-out hover:-translate-y-1 hover:shadow-e2 active:translate-y-0 active:scale-[0.98]"
 									>
-										{/* Header */}
-										<div className="flex shrink-0 items-center gap-1.5 border-b px-2.5 py-2">
-											{type === "pdf" ? (
-												<span className="shrink-0 rounded-sm bg-red-600 px-1 py-px text-[9px] font-bold tracking-wide text-white">
-													PDF
-												</span>
-											) : type === "image" ? (
-												<ImageIcon className="size-3.5 shrink-0 text-brand" />
-											) : (
-												<File className="size-3.5 shrink-0 text-muted-foreground" />
-											)}
-											<span className="flex-1 truncate text-[11px] font-medium">
-												{name}
-											</span>
-										</div>
-
-										{/* Preview */}
-										<div className="relative flex-1 overflow-hidden bg-muted/30">
+										{/* Preview a sangre: la miniatura es el
+										    contenido, el nombre es el pie */}
+										<div className="relative flex-1 overflow-hidden bg-secondary/50">
 											{type === "image" && url ? (
 												<img
 													src={url}
@@ -118,6 +105,24 @@ export function FileGallery({ label, paths }: FileGalleryProps) {
 												</div>
 											)}
 										</div>
+
+										<div className="flex shrink-0 items-center gap-1.5 px-3 py-2.5">
+											{type === "pdf" ? (
+												<Badge
+													variant="soft"
+													className="shrink-0 bg-rose-100 px-1.5 text-[10px] text-rose-700 dark:bg-rose-400/15 dark:text-rose-200"
+												>
+													PDF
+												</Badge>
+											) : type === "image" ? (
+												<ImageIcon className="size-3.5 shrink-0 text-muted-foreground" />
+											) : (
+												<File className="size-3.5 shrink-0 text-muted-foreground" />
+											)}
+											<span className="flex-1 truncate font-mono text-[11px]">
+												{name}
+											</span>
+										</div>
 									</button>
 								);
 							})}
@@ -128,7 +133,7 @@ export function FileGallery({ label, paths }: FileGalleryProps) {
 				open={selected !== null}
 				onOpenChange={(open) => !open && setSelected(null)}
 			>
-				<DialogContent className="w-full max-w-4xl p-4">
+				<DialogContent className="w-full max-w-4xl rounded-panel p-4">
 					<DialogHeader>
 						<DialogTitle className="flex items-center justify-between pr-8">
 							<span className="truncate text-sm font-medium">
