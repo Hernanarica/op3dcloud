@@ -5,13 +5,12 @@ import {
 	Calendar,
 	Check,
 	Download,
-	ExternalLink,
+	FileBarChart,
 	FileText,
 	FolderOpen,
 	Gauge,
 	Layers,
 	Link2,
-	Route,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -21,7 +20,7 @@ import { getTreatmentFilePublicUrl } from "@/services/supabase/storage.service";
 import type { PatientsRow } from "@/types/db/patients/patients";
 import { getCaseWorkflow, type WorkflowStepState } from "../lib/case-workflow";
 import type { TreatmentPlanningRow } from "../lib/useTreatmentPlanning";
-import { KpiTile, SectionCard } from "./case-ui";
+import { ActionRow, ProgressBar, SectionCard, StatTile } from "./case-ui";
 
 interface CaseProps {
 	patient: PatientsRow;
@@ -36,29 +35,29 @@ export default function CaseSummary({
 }: CaseProps) {
 	if (isLoading) {
 		return (
-			<div className="space-y-3">
-				<div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+			<div className="space-y-4 md:space-y-6">
+				<div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
 					{["a", "b", "c", "d"].map((k) => (
-						<Skeleton key={k} className="h-20 rounded-xl" />
+						<Skeleton key={k} className="h-32 rounded-card" />
 					))}
 				</div>
-				<Skeleton className="h-44 rounded-xl" />
+				<div className="grid items-start gap-4 md:gap-6 lg:grid-cols-3">
+					<Skeleton className="h-64 rounded-card lg:col-span-2" />
+					<Skeleton className="h-64 rounded-card" />
+				</div>
 			</div>
 		);
 	}
 
 	return (
-		<div className="space-y-3">
+		<div className="space-y-4 md:space-y-6">
 			<CaseKpis patient={patient} planning={planning} />
 
-			<div className="grid items-start gap-3 lg:grid-cols-3">
+			<div className="grid items-start gap-4 md:gap-6 lg:grid-cols-3">
 				<div className="lg:col-span-2">
 					<CaseWorkflow patient={patient} planning={planning} />
 				</div>
-				<div className="space-y-3">
-					<PlanningCard planning={planning} />
-					<DeliverablesCard planning={planning} />
-				</div>
+				<CaseResources planning={planning} />
 			</div>
 		</div>
 	);
@@ -78,34 +77,35 @@ function CaseKpis({
 		: null;
 
 	return (
-		<div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-			<KpiTile
+		<div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+			<StatTile
 				icon={Layers}
-				label="Cantidad de alineadores"
+				label="Alineadores"
 				value={aligners !== null ? String(aligners) : "Pendiente"}
 				hint={
 					planning
-						? `Sup. ${planning.upper_aligners} / Inf. ${planning.lower_aligners}`
+						? `Sup. ${planning.upper_aligners} · Inf. ${planning.lower_aligners}`
 						: undefined
 				}
 				muted={aligners === null}
 			/>
-			<KpiTile
+			<StatTile
 				icon={Gauge}
 				label="Complejidad"
 				value={planning?.complexity || "Pendiente"}
 				muted={!planning?.complexity}
 			/>
-			<KpiTile
+			<StatTile
 				icon={FolderOpen}
 				label="Tipo de caso"
 				value={patient.type_of_plan}
 				muted={!patient.type_of_plan}
 			/>
-			<KpiTile
+			<StatTile
 				icon={Calendar}
-				label="Última actualización"
+				label="Actualizado"
 				value={formatDate(planning?.created_at ?? patient.created_at)}
+				muted
 			/>
 		</div>
 	);
@@ -121,55 +121,43 @@ function CaseWorkflow({
 	planning: TreatmentPlanningRow | null;
 }) {
 	const steps = getCaseWorkflow(patient, planning);
+	const doneCount = steps.filter((step) => step.state === "done").length;
 
 	return (
-		<SectionCard title="Workflow del caso" icon={Route}>
-			{/* Horizontal en desktop, vertical en mobile */}
-			<ol className="flex flex-col gap-4 md:flex-row md:gap-0">
+		<SectionCard
+			title="Progreso del caso"
+			action={
+				<span className="shrink-0 text-3xl leading-none font-semibold tracking-[-0.02em] tabular-nums">
+					{doneCount}
+					<span className="text-muted-foreground">
+						/{steps.length}
+					</span>
+				</span>
+			}
+		>
+			<ProgressBar value={doneCount / steps.length} />
+
+			<ol className="grid gap-4 md:grid-cols-4">
 				{steps.map((step, index) => (
 					<li
 						key={step.id}
-						className="flex flex-1 gap-3 md:flex-col md:items-center md:gap-2 md:text-center"
+						className={cn(
+							"relative flex items-start gap-3 md:block",
+							// Conector: una línea detrás del círculo, hasta la
+							// celda siguiente. La última no lleva.
+							index < steps.length - 1 &&
+								"md:after:absolute md:after:top-[1.125rem] md:after:left-[calc(2.25rem+0.5rem)] md:after:h-0.5 md:after:w-[calc(100%-2.25rem)] md:after:rounded-full",
+							index < steps.length - 1 &&
+								(steps[index + 1]?.state === "done"
+									? "md:after:bg-foreground"
+									: "md:after:bg-secondary"),
+						)}
 					>
-						<div className="flex flex-col items-center md:w-full md:flex-row">
-							{/* Conector izquierdo (solo desktop) */}
-							<span
-								className={cn(
-									"hidden h-px flex-1 md:block",
-									index === 0 && "invisible",
-									step.state === "done"
-										? "bg-brand"
-										: "bg-border",
-								)}
-							/>
-							<StepCircle state={step.state} />
-							{/* Conector derecho (solo desktop) */}
-							<span
-								className={cn(
-									"hidden h-px flex-1 md:block",
-									index === steps.length - 1 && "invisible",
-									steps[index + 1]?.state === "done"
-										? "bg-brand"
-										: "bg-border",
-								)}
-							/>
-							{/* Conector vertical (solo mobile) */}
-							{index < steps.length - 1 && (
-								<span
-									className={cn(
-										"w-px flex-1 md:hidden",
-										steps[index + 1]?.state === "done"
-											? "bg-brand"
-											: "bg-border",
-									)}
-								/>
-							)}
-						</div>
-
-						<div className="pb-4 md:pb-0">
+						<StepCircle state={step.state} />
+						<div className="min-w-0 md:mt-3">
 							<p
 								className={cn(
-									"text-xs font-medium",
+									"text-sm font-medium",
 									step.state === "pending"
 										? "text-muted-foreground"
 										: "text-foreground",
@@ -178,7 +166,7 @@ function CaseWorkflow({
 								{step.label}
 							</p>
 							{step.date && (
-								<p className="text-[11px] text-muted-foreground">
+								<p className="text-xs text-muted-foreground tabular-nums">
 									{formatDate(step.date)}
 								</p>
 							)}
@@ -187,26 +175,35 @@ function CaseWorkflow({
 				))}
 			</ol>
 
-			<p className="rounded-md border border-dashed p-3 text-xs text-muted-foreground">
-				<span className="font-medium">Documentación</span> se completa
-				con fotos, radiografías y escaneos cargados más la declaración
-				jurada. <span className="font-medium">En planificación</span>,
-				cuando el planificador guarda el formulario del caso.
+			<p className="rounded-tile bg-secondary/60 p-4 text-xs leading-5 text-muted-foreground">
+				<span className="font-medium text-foreground">
+					Documentación
+				</span>{" "}
+				se completa con fotos, radiografías y escaneos cargados más la
+				declaración jurada.{" "}
+				<span className="font-medium text-foreground">
+					En planificación
+				</span>
+				, cuando el planificador guarda el formulario del caso.
 			</p>
 		</SectionCard>
 	);
 }
 
+/**
+ * Los tres estados se distinguen por relleno y no por color: completado es
+ * sólido, el actual va contorneado y el pendiente en gris. Así funciona
+ * igual en claro y en oscuro, y para quien no distingue colores.
+ */
 function StepCircle({ state }: { state: WorkflowStepState }) {
 	return (
 		<span
 			className={cn(
-				"flex size-8 shrink-0 items-center justify-center rounded-full border-2",
-				state === "done" &&
-					"border-brand bg-brand text-brand-foreground",
-				state === "current" && "border-brand bg-brand-muted text-brand",
-				state === "pending" &&
-					"border-border bg-background text-muted-foreground",
+				"relative z-10 flex size-9 shrink-0 items-center justify-center rounded-full",
+				state === "done" && "bg-foreground text-background",
+				state === "current" &&
+					"bg-card text-foreground ring-2 ring-foreground",
+				state === "pending" && "bg-secondary text-muted-foreground",
 			)}
 		>
 			{state === "done" ? (
@@ -218,33 +215,9 @@ function StepCircle({ state }: { state: WorkflowStepState }) {
 	);
 }
 
-/* ── Planificación 3D ──────────────────────────────────────────────────── */
+/* ── Recursos del caso ─────────────────────────────────────────────────── */
 
-function PlanningCard({ planning }: { planning: TreatmentPlanningRow | null }) {
-	return (
-		<SectionCard title="Planificación 3D" icon={Box}>
-			{planning?.render_3d ? (
-				<a
-					href={planning.render_3d}
-					target="_blank"
-					rel="noopener noreferrer"
-					className="inline-flex items-center gap-1.5 text-sm font-medium text-brand hover:underline"
-				>
-					<ExternalLink className="h-3.5 w-3.5" />
-					Abrir planificación
-				</a>
-			) : (
-				<p className="text-sm text-muted-foreground">
-					Todavía no hay un render 3D disponible para este caso.
-				</p>
-			)}
-		</SectionCard>
-	);
-}
-
-/* ── Entregables ───────────────────────────────────────────────────────── */
-
-function DeliverablesCard({
+function CaseResources({
 	planning,
 }: {
 	planning: TreatmentPlanningRow | null;
@@ -252,29 +225,36 @@ function DeliverablesCard({
 	const reportUrl = planning?.technical_report_url;
 
 	return (
-		<SectionCard title="Entregables" icon={FolderOpen}>
-			{reportUrl ? (
-				<a
-					href={getTreatmentFilePublicUrl(reportUrl)}
-					target="_blank"
-					rel="noopener noreferrer"
-					className="inline-flex items-center gap-1.5 text-sm font-medium text-brand hover:underline"
-				>
-					<ExternalLink className="h-3.5 w-3.5" />
-					Informe técnico
-				</a>
-			) : (
-				<p className="text-sm text-muted-foreground">
-					Todavía no hay un informe técnico para este caso.
-				</p>
-			)}
+		<SectionCard title="Recursos del caso" className="gap-3">
+			<div className="-mx-1 space-y-0.5">
+				<ActionRow
+					icon={Box}
+					title="Planificación 3D"
+					hint="Render interactivo"
+					href={planning?.render_3d}
+					emptyLabel="Todavía no disponible"
+				/>
+				<ActionRow
+					icon={FileBarChart}
+					title="Informe técnico"
+					hint="Documento del planificador"
+					href={
+						reportUrl ? getTreatmentFilePublicUrl(reportUrl) : null
+					}
+					emptyLabel="Todavía no disponible"
+				/>
+			</div>
 		</SectionCard>
 	);
 }
 
-/* ── Toolbar de acciones del caso ──────────────────────────────────────── */
+/* ── Acciones del caso ─────────────────────────────────────────────────── */
 
-export function CaseToolbar({
+/**
+ * Van dentro del hero, sobre la superficie invertida: por eso los colores
+ * salen de `primary-foreground` y no de blanco literal.
+ */
+export function CaseActions({
 	patient,
 	planning,
 	showViewPlanning,
@@ -288,17 +268,22 @@ export function CaseToolbar({
 	onCopyLink: () => void;
 }) {
 	return (
-		<div className="flex flex-wrap gap-2">
+		<>
+			<Button variant="inverse" size="pillSm" onClick={onCopyLink}>
+				<Link2 className="size-4" />
+				Copiar link
+			</Button>
 			{showViewPlanning && (
-				<Button variant="outline" size="sm" onClick={onViewPlanning}>
-					<FileText className="h-4 w-4" />
+				<Button
+					variant="ghost"
+					size="pillSm"
+					className="text-primary-foreground hover:bg-primary-foreground/12 hover:text-primary-foreground"
+					onClick={onViewPlanning}
+				>
+					<FileText className="size-4" />
 					Ver planificación
 				</Button>
 			)}
-			<Button variant="outline" size="sm" onClick={onCopyLink}>
-				<Link2 className="h-4 w-4" />
-				Copiar link
-			</Button>
 			{planning && (
 				<PDFDownloadButton
 					doc={
@@ -310,7 +295,7 @@ export function CaseToolbar({
 					fileName={`planificacion-${patient.name}-${patient.last_name}.pdf`}
 				/>
 			)}
-		</div>
+		</>
 	);
 }
 
@@ -333,13 +318,14 @@ function PDFDownloadButton({
 
 	return (
 		<Button
-			variant="outline"
-			size="sm"
+			variant="ghost"
+			size="pillSm"
+			className="text-primary-foreground hover:bg-primary-foreground/12 hover:text-primary-foreground"
 			disabled={instance.loading || !!instance.error}
 			onClick={handleDownload}
 		>
-			<Download className="h-4 w-4" />
-			{instance.loading ? "Generando..." : "Descargar PDF"}
+			<Download className="size-4" />
+			{instance.loading ? "Generando..." : "PDF"}
 		</Button>
 	);
 }
