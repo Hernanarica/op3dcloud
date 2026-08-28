@@ -196,6 +196,30 @@ export type Database = {
 					},
 				];
 			};
+			exchange_rate: {
+				Row: {
+					created_at: string;
+					currency: string;
+					id: number;
+					period: string;
+					rate: number;
+				};
+				Insert: {
+					created_at?: string;
+					currency: string;
+					id?: never;
+					period: string;
+					rate: number;
+				};
+				Update: {
+					created_at?: string;
+					currency?: string;
+					id?: never;
+					period?: string;
+					rate?: number;
+				};
+				Relationships: [];
+			};
 			patient_models: {
 				Row: {
 					created_at: string;

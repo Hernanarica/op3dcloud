@@ -3,10 +3,11 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { FileUpload } from "@/components/ui/file-upload";
-import { formatUsd, type Plan } from "../plans.data";
+import type { Plan } from "../plans.data";
 
 interface StepReceiptProps {
 	plan: Plan;
+	format: (usdValue: number) => string;
 	files: File[];
 	onFilesChange: (files: File[]) => void;
 	onBack: () => void;
@@ -34,6 +35,7 @@ const TRANSFER_DATA_USD = [
 
 export default function StepReceipt({
 	plan,
+	format,
 	files,
 	onFilesChange,
 	onBack,
@@ -88,8 +90,8 @@ export default function StepReceipt({
 					Realizá la transferencia
 				</h2>
 				<p className="text-muted-foreground mt-1 text-sm">
-					Transferí {plan.total != null ? formatUsd(plan.total) : ""}{" "}
-					y subí el comprobante para que verifiquemos tu pago.
+					Transferí {plan.total != null ? format(plan.total) : ""} y
+					subí el comprobante para que verifiquemos tu pago.
 				</p>
 			</div>
 

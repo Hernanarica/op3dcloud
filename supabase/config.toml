@@ -62,6 +62,7 @@ schema_paths = [
     "./schemas/table_treatment_planning.sql",
     "./schemas/table_patient_models.sql",
     "./schemas/table_plans.sql",
+    "./schemas/table_exchange_rate.sql",
     "./schemas/table_credit_payments.sql",
     "./schemas/table_credit_transactions.sql",
     # views

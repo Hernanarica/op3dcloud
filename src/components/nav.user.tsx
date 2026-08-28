@@ -1,4 +1,10 @@
-import { ChevronsUpDown, FingerprintIcon, LogOut, User2 } from "lucide-react";
+import {
+	ArrowLeftRight,
+	ChevronsUpDown,
+	FingerprintIcon,
+	LogOut,
+	User2,
+} from "lucide-react";
 import { Link, useNavigate } from "react-router";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
@@ -90,12 +96,20 @@ export function NavUser() {
 							Log out
 						</DropdownMenuItem>
 						{role === "admin" && (
-							<DropdownMenuItem asChild>
-								<Link to="/accesos">
-									<FingerprintIcon />
-									Accesos
-								</Link>
-							</DropdownMenuItem>
+							<>
+								<DropdownMenuItem asChild>
+									<Link to="/accesos">
+										<FingerprintIcon />
+										Accesos
+									</Link>
+								</DropdownMenuItem>
+								<DropdownMenuItem asChild>
+									<Link to="/tipos-de-cambio">
+										<ArrowLeftRight />
+										Tipos de cambio
+									</Link>
+								</DropdownMenuItem>
+							</>
 						)}
 					</DropdownMenuContent>
 				</DropdownMenu>

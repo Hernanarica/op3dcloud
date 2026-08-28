@@ -16,7 +16,8 @@ import StepPartnerForm, {
 	type PartnerFormValues,
 } from "./components/StepPartnerForm";
 import StepReceipt from "./components/StepReceipt";
-import type { Plan } from "./plans.data";
+import type { CurrencyCode, Plan } from "./plans.data";
+import { useCurrencyFormatter } from "./useCurrencyFormatter";
 
 // Placeholders: hoy no hay sesión ni catálogo real. Se reemplazan al conectar
 // el backend por auth.uid() y el plans.id que devuelva Supabase.
@@ -29,6 +30,8 @@ export default function SubscriptionPage() {
 	const [currentStep, setCurrentStep] = useState(1);
 	const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null);
 	const [files, setFiles] = useState<File[]>([]);
+	const [currency, setCurrency] = useState<CurrencyCode>("USD");
+	const { format } = useCurrencyFormatter(currency);
 
 	const isPartner = selectedPlan?.custom === true;
 	const steps = isPartner ? PARTNER_STEPS : FIXED_STEPS;
@@ -91,7 +94,14 @@ export default function SubscriptionPage() {
 	// Contenido según paso y rama
 	function renderStep() {
 		if (currentStep === 1) {
-			return <StepChoosePlan onChoose={handleChoosePlan} />;
+			return (
+				<StepChoosePlan
+					currency={currency}
+					format={format}
+					onCurrencyChange={setCurrency}
+					onChoose={handleChoosePlan}
+				/>
+			);
 		}
 
 		if (!selectedPlan) return null;
@@ -106,13 +116,20 @@ export default function SubscriptionPage() {
 					/>
 				);
 			}
-			return <StepDone plan={selectedPlan} variant="partner" />;
+			return (
+				<StepDone
+					plan={selectedPlan}
+					format={format}
+					variant="partner"
+				/>
+			);
 		}
 
 		if (currentStep === 2) {
 			return (
 				<StepConfirm
 					plan={selectedPlan}
+					format={format}
 					onBack={() => setCurrentStep(1)}
 					onConfirm={handleConfirm}
 				/>
@@ -123,6 +140,7 @@ export default function SubscriptionPage() {
 			return (
 				<StepReceipt
 					plan={selectedPlan}
+					format={format}
 					files={files}
 					onFilesChange={setFiles}
 					onBack={() => setCurrentStep(2)}
@@ -131,7 +149,9 @@ export default function SubscriptionPage() {
 			);
 		}
 
-		return <StepDone plan={selectedPlan} variant="receipt" />;
+		return (
+			<StepDone plan={selectedPlan} format={format} variant="receipt" />
+		);
 	}
 
 	return (
