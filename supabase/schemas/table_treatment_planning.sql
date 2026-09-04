@@ -34,6 +34,9 @@ CREATE TABLE op3dcloud.treatment_planning (
   quality_extraoral         TEXT[] NOT NULL DEFAULT '{}',                 -- Calidad de fotos extraorales
   -- Observaciones
   additional_observations   TEXT NULL,                                    -- Observaciones adicionales
+  -- Aprobación del cliente (desbloquea los modelos 3D en /pacientes)
+  client_approved           BOOLEAN NOT NULL DEFAULT FALSE,
+  client_approved_at        TIMESTAMPTZ NULL,
   CONSTRAINT treatment_planning_pkey PRIMARY KEY (id),
   CONSTRAINT treatment_planning_patient_id_fkey FOREIGN KEY (patient_id)
     REFERENCES op3dcloud.patients (id) ON DELETE CASCADE
@@ -84,3 +87,5 @@ COMMENT ON COLUMN op3dcloud.treatment_planning.quality_xrays IS 'Evaluación de 
 COMMENT ON COLUMN op3dcloud.treatment_planning.quality_intraoral IS 'Evaluación de la calidad de las fotos intraorales';
 COMMENT ON COLUMN op3dcloud.treatment_planning.quality_extraoral IS 'Evaluación de la calidad de las fotos extraorales';
 COMMENT ON COLUMN op3dcloud.treatment_planning.additional_observations IS 'Observaciones adicionales del caso';
+COMMENT ON COLUMN op3dcloud.treatment_planning.client_approved IS 'True cuando el cliente aprueba la planificación y desbloquea los modelos 3D';
+COMMENT ON COLUMN op3dcloud.treatment_planning.client_approved_at IS 'Fecha y hora en que el cliente aprobó la planificación';

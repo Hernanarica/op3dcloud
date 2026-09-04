@@ -1,6 +1,7 @@
 import { createBrowserRouter, Navigate, Outlet } from "react-router";
 import PublicLayout from "@/layout/PublicLayout";
 import Accesses from "@/pages/accesses";
+import ExchangeRates from "@/pages/exchange-rates";
 import FormPlanificadorPdf from "@/pages/formPlanificadorPdf";
 import Patients from "@/pages/patient";
 import CreatePatient from "@/pages/patient/create";
@@ -117,6 +118,14 @@ const router = createBrowserRouter([
 				element: (
 					<RoleGuard allowedRoles={["admin"]}>
 						<Accesses />
+					</RoleGuard>
+				),
+			},
+			{
+				path: "tipos-de-cambio",
+				element: (
+					<RoleGuard allowedRoles={["admin"]}>
+						<ExchangeRates />
 					</RoleGuard>
 				),
 			},

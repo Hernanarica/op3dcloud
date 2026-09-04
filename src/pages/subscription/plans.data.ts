@@ -3,6 +3,7 @@
 // solo como fallback (si la DB todavía no está sembrada) y el copy comercial
 // (concepto, beneficios, label, etc.) que NO vive en la tabla.
 
+import type { ExchangeRateRow } from "@/types/db/exchange-rate/exchange-rate";
 import type { PlanRow } from "@/types/db/plans/plans";
 
 export type PlanKey = "case" | "flow" | "scale" | "corp" | "partner";
@@ -224,14 +225,56 @@ export const COMMON_INCLUSIONS: string[] = [
 export const PLANS_FOOTER_NOTE =
 	"Todos los planes incluyen acceso a OP3DCloud para la gestión online de casos y acceso a OP3DViewer para visualización 3D.";
 
+export type CurrencyCode = "ARS" | "USD" | "EUR";
+
+export const CURRENCY_LABELS: Record<CurrencyCode, string> = {
+	USD: "Dólares (USD)",
+	ARS: "Pesos (ARS)",
+	EUR: "Euros (EUR)",
+};
+
+/** Código ISO 3166-1 alpha-2 para mostrar la bandera de cada moneda. */
+export const CURRENCY_COUNTRY_CODES: Record<CurrencyCode, string> = {
+	ARS: "AR",
+	USD: "US",
+	EUR: "EU",
+};
+
 /**
- * Formatea un valor en USD respetando los centavos (PDF, sección 24).
- * Ej: 2889 -> "USD 2.889,00" · 57.78 -> "USD 57,78".
+ * Tasa vigente de cada moneda: la fila de mayor `period` cargada en
+ * exchange_rate. ARS es la moneda de referencia (así se cargan las tasas:
+ * "cuántos ARS cuesta comprar 1 unidad de esa moneda", lo mismo que se lee
+ * en una casa de cambio), así que su tasa es siempre 1 aunque no haya fila
+ * ARS en la DB. USD/EUR sin tasa cargada quedan `undefined` — a diferencia
+ * de defaultear a 1, esto le permite a `useCurrencyFormatter` distinguir
+ * "no hay dato" y no calcular un número roto.
  */
-export function formatUsd(value: number): string {
+export function getLatestRates(
+	rows: ExchangeRateRow[],
+): Partial<Record<CurrencyCode, number>> {
+	const latest: Partial<Record<CurrencyCode, ExchangeRateRow>> = {};
+	for (const row of rows) {
+		const currency = row.currency as CurrencyCode;
+		const current = latest[currency];
+		if (!current || row.period > current.period) {
+			latest[currency] = row;
+		}
+	}
+	return {
+		ARS: 1,
+		USD: latest.USD?.rate,
+		EUR: latest.EUR?.rate,
+	};
+}
+
+/**
+ * Formatea un valor en la moneda indicada respetando los centavos (PDF,
+ * sección 24). Ej: formatCurrency(2889, "USD") -> "USD 2.889,00".
+ */
+export function formatCurrency(value: number, currency: CurrencyCode): string {
 	const formatted = new Intl.NumberFormat("es-AR", {
 		minimumFractionDigits: 2,
 		maximumFractionDigits: 2,
 	}).format(value);
-	return `USD ${formatted}`;
+	return `${currency} ${formatted}`;
 }

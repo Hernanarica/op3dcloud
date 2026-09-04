@@ -36,7 +36,7 @@ export default function Clients() {
 
 	if (isLoading) {
 		return (
-			<div className="w-full min-h-[calc(100vh-2.75rem)] lg:h-full">
+			<div className="w-full min-h-full lg:h-full">
 				<div className="container mx-auto flex items-center justify-center h-full">
 					<div className="text-center">
 						<div className="text-sm text-muted-foreground">
@@ -49,7 +49,7 @@ export default function Clients() {
 	}
 
 	return (
-		<div className="w-full min-h-[calc(100vh-2.75rem)] lg:h-full">
+		<div className="w-full min-h-full lg:h-full">
 			<div className="container mx-auto">
 				<DataTable
 					columns={createColumns()}

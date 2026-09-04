@@ -5,7 +5,6 @@ import "@fontsource-variable/geist";
 import "@fontsource-variable/geist-mono";
 import "./index.css";
 import { Toaster } from "@/components/ui/sonner";
-import WhatsAppButton from "./components/WhatsAppButton.tsx";
 import ReactRouterProvider from "./providers/ReactRouterProvider.tsx";
 import { SWRProvider } from "./providers/SWRProvider.tsx";
 
@@ -17,7 +16,6 @@ createRoot(document.getElementById("root") as HTMLElement).render(
 		<SWRProvider>
 			<ReactRouterProvider />
 			<Toaster />
-			<WhatsAppButton />
 		</SWRProvider>
 	</StrictMode>,
 );
