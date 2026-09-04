@@ -1,5 +1,8 @@
+import { ArrowLeftIcon } from "lucide-react";
 import { useState } from "react";
+import { Link } from "react-router";
 import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
 import {
 	Stepper,
 	StepperIndicator,
@@ -155,40 +158,52 @@ export default function SubscriptionPage() {
 	}
 
 	return (
-		<div className="container mx-auto max-w-7xl px-4 py-8">
-			<div className="mb-8 text-center">
-				<h1 className="text-foreground text-3xl font-bold">
-					Planes y créditos
-				</h1>
-				<p className="text-muted-foreground mt-1">OrthoPlanner3D™</p>
-			</div>
+		<div>
+			<Button variant="ghost" asChild>
+				<Link to="/">
+					<ArrowLeftIcon />
+				</Link>
+			</Button>
 
-			<div className="mx-auto mb-10 max-w-2xl">
-				<Stepper value={currentStep}>
-					{steps.map((label, index) => {
-						const step = index + 1;
-						return (
-							<StepperItem
-								key={label}
-								step={step}
-								disabled
-								completed={step < currentStep}
-								className="not-last:flex-1"
-							>
-								<StepperTrigger className="gap-2">
-									<StepperIndicator />
-									<StepperTitle className="hidden sm:block">
-										{label}
-									</StepperTitle>
-								</StepperTrigger>
-								{step < steps.length && <StepperSeparator />}
-							</StepperItem>
-						);
-					})}
-				</Stepper>
-			</div>
+			<div className="container mx-auto max-w-7xl px-4 py-8">
+				<div className="mb-8 text-center">
+					<h1 className="text-foreground text-3xl font-bold">
+						Planes y créditos
+					</h1>
+					<p className="text-muted-foreground mt-1">
+						OrthoPlanner3D™
+					</p>
+				</div>
 
-			{renderStep()}
+				<div className="mx-auto mb-10 max-w-2xl">
+					<Stepper value={currentStep}>
+						{steps.map((label, index) => {
+							const step = index + 1;
+							return (
+								<StepperItem
+									key={label}
+									step={step}
+									disabled
+									completed={step < currentStep}
+									className="not-last:flex-1"
+								>
+									<StepperTrigger className="gap-2">
+										<StepperIndicator />
+										<StepperTitle className="hidden sm:block">
+											{label}
+										</StepperTitle>
+									</StepperTrigger>
+									{step < steps.length && (
+										<StepperSeparator />
+									)}
+								</StepperItem>
+							);
+						})}
+					</Stepper>
+				</div>
+
+				{renderStep()}
+			</div>
 		</div>
 	);
 }
