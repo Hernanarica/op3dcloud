@@ -121,7 +121,7 @@ export default function Patients() {
 				{/* Panel de lista: acompaña el scroll de la página */}
 				<aside
 					className={cn(
-						"md:sticky md:top-4 md:col-span-5 md:max-h-[calc(100svh-3rem)] lg:col-span-4 xl:col-span-3",
+						"md:sticky md:top-4 md:col-span-5 md:max-h-[calc(100svh-var(--navbar-offset)-3rem)] lg:col-span-4 xl:col-span-3",
 						mobileView === "detail" ? "hidden md:block" : "block",
 					)}
 				>

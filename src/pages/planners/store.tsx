@@ -83,7 +83,7 @@ export default function PlannersStore() {
 	}
 
 	return (
-		<div className="min-h-[calc(100vh-60px)] lg:min-h-[calc(100vh-32px)] flex items-center justify-center">
+		<div className="flex min-h-full items-center justify-center">
 			<div className="max-w-xl w-full">
 				<Form {...form}>
 					<form
