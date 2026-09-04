@@ -29,13 +29,15 @@ function hasRequiredDocumentation(patient: PatientsRow): boolean {
  * Estado del caso derivado de los datos que ya existen. No hay tabla de
  * workflow: cada paso se infiere de un campo real.
  *
- * No hay ninguna columna donde se guarde la aprobación del cliente, así que el
- * caso nunca avanza más allá de "Pendiente de aprobación".
+ * La aprobación vive en `treatment_planning.client_approved`. Hasta que el
+ * cliente aprueba, el caso se queda en "Pendiente de aprobación".
  */
 export function getCaseWorkflow(
 	patient: PatientsRow,
 	planning: TreatmentPlanningRow | null,
 ): WorkflowStep[] {
+	const approved = planning?.client_approved === true;
+
 	const steps: WorkflowStep[] = [
 		{
 			id: "loaded",
@@ -56,8 +58,9 @@ export function getCaseWorkflow(
 		},
 		{
 			id: "approval",
-			label: "Pendiente de aprobación",
-			state: "pending",
+			label: approved ? "Aprobada" : "Pendiente de aprobación",
+			state: approved ? "done" : "pending",
+			date: planning?.client_approved_at ?? undefined,
 		},
 	];
 

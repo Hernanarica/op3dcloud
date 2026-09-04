@@ -4,6 +4,7 @@ import {
 	Box,
 	Calendar,
 	Check,
+	CheckCircle,
 	Download,
 	FileBarChart,
 	FileText,
@@ -14,6 +15,11 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+	Tooltip,
+	TooltipContent,
+	TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { cn, formatDate } from "@/lib/utils";
 import { TreatmentPlanningDocument } from "@/pages/formPlanificadorPdf";
 import { getTreatmentFilePublicUrl } from "@/services/supabase/storage.service";
@@ -258,33 +264,53 @@ export function CaseActions({
 	patient,
 	planning,
 	showViewPlanning,
+	isApproving,
 	onViewPlanning,
 	onCopyLink,
+	onApprove,
 }: {
 	patient: PatientsRow;
 	planning: TreatmentPlanningRow | null;
 	showViewPlanning: boolean;
+	isApproving: boolean;
 	onViewPlanning: () => void;
 	onCopyLink: () => void;
+	onApprove: () => void;
 }) {
+	const canApprove = Boolean(
+		patient.planning_enabled && planning && !planning.client_approved,
+	);
+
 	return (
 		<>
-			<Button variant="inverse" size="pillSm" onClick={onCopyLink}>
-				<Link2 className="size-4" />
-				Copiar link
-			</Button>
-			{showViewPlanning && (
-				<Button
-					variant="ghost"
-					size="pillSm"
-					className="text-primary-foreground hover:bg-primary-foreground/12 hover:text-primary-foreground"
+			{canApprove ? (
+				<HeroIconButton
+					label={
+						isApproving ? "Aprobando..." : "Aprobar planificación"
+					}
+					variant="inverse"
+					disabled={isApproving}
+					onClick={onApprove}
+				>
+					<CheckCircle />
+				</HeroIconButton>
+			) : null}
+			<HeroIconButton
+				label="Copiar link"
+				variant={canApprove ? "ghost" : "inverse"}
+				onClick={onCopyLink}
+			>
+				<Link2 />
+			</HeroIconButton>
+			{showViewPlanning ? (
+				<HeroIconButton
+					label="Ver planificación"
 					onClick={onViewPlanning}
 				>
-					<FileText className="size-4" />
-					Ver planificación
-				</Button>
-			)}
-			{planning && (
+					<FileText />
+				</HeroIconButton>
+			) : null}
+			{planning ? (
 				<PDFDownloadButton
 					doc={
 						<TreatmentPlanningDocument
@@ -294,8 +320,51 @@ export function CaseActions({
 					}
 					fileName={`planificacion-${patient.name}-${patient.last_name}.pdf`}
 				/>
-			)}
+			) : null}
 		</>
+	);
+}
+
+function HeroIconButton({
+	label,
+	onClick,
+	disabled,
+	variant = "ghost",
+	children,
+}: {
+	label: string;
+	onClick?: () => void;
+	disabled?: boolean;
+	variant?: "ghost" | "inverse";
+	children: React.ReactNode;
+}) {
+	return (
+		<Tooltip>
+			<TooltipTrigger asChild>
+				<Button
+					type="button"
+					variant={variant}
+					size="icon"
+					disabled={disabled}
+					aria-label={label}
+					className={cn(
+						"rounded-full",
+						variant === "ghost" &&
+							"text-primary-foreground hover:bg-primary-foreground/12 hover:text-primary-foreground",
+					)}
+					onClick={onClick}
+				>
+					{children}
+				</Button>
+			</TooltipTrigger>
+			<TooltipContent
+				side="bottom"
+				hideArrow
+				className="bg-primary-foreground text-primary"
+			>
+				{label}
+			</TooltipContent>
+		</Tooltip>
 	);
 }
 
@@ -307,6 +376,7 @@ function PDFDownloadButton({
 	fileName: string;
 }) {
 	const [instance] = usePDF({ document: doc });
+	const label = instance.loading ? "Generando PDF..." : "Descargar PDF";
 
 	const handleDownload = () => {
 		if (!instance.url) return;
@@ -317,15 +387,12 @@ function PDFDownloadButton({
 	};
 
 	return (
-		<Button
-			variant="ghost"
-			size="pillSm"
-			className="text-primary-foreground hover:bg-primary-foreground/12 hover:text-primary-foreground"
+		<HeroIconButton
+			label={label}
 			disabled={instance.loading || !!instance.error}
 			onClick={handleDownload}
 		>
-			<Download className="size-4" />
-			{instance.loading ? "Generando..." : "PDF"}
-		</Button>
+			<Download />
+		</HeroIconButton>
 	);
 }

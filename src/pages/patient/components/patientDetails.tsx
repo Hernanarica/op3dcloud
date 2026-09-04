@@ -2,12 +2,16 @@ import { CheckCircle, XCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import type { PatientsRow } from "@/types/db/patients/patients";
+import type { TreatmentPlanningRow } from "../lib/useTreatmentPlanning";
 import { Eyebrow, FieldChecklist, SectionCard } from "./case-ui";
 import { FileGallery } from "./FileGallery";
-import { ModelGallery } from "./ModelGallery";
+import { ModelGallery, ModelsLockedFallback } from "./ModelGallery";
 
 interface PatientDetailProps {
 	patient: PatientsRow;
+	planning: TreatmentPlanningRow | null;
+	isApproving: boolean;
+	onApprove: () => void;
 }
 
 /** Los arrays de Postgres pueden llegar como `{a,b}` en vez de array real. */
@@ -28,10 +32,19 @@ function toArray(v: unknown): string[] {
  * (`pages/patient/create.tsx`). Las secciones, su orden y los labels espejan
  * los 5 pasos de ese formulario para que sea reconocible.
  */
-export default function PatientDetail({ patient }: PatientDetailProps) {
+export default function PatientDetail({
+	patient,
+	planning,
+	isApproving,
+	onApprove,
+}: PatientDetailProps) {
 	const notes = patient.notes?.trim();
 	const observations = patient.observations_or_instructions?.trim();
 	const statusFiles = toArray(patient.status_files);
+	const isApproved = planning?.client_approved === true;
+	const canApprove = Boolean(
+		patient.planning_enabled && planning && !isApproved,
+	);
 
 	return (
 		<div className="space-y-4 pb-4 md:space-y-6">
@@ -125,9 +138,31 @@ export default function PatientDetail({ patient }: PatientDetailProps) {
 				/>
 			</SectionCard>
 
-			{/* Vienen de stl-render, no del formulario de creación */}
-			<SectionCard title="Modelos 3D">
-				<ModelGallery patientId={patient.id} />
+			{/* Vienen de stl-render, no del formulario de creación. Se
+			    listan recién cuando el cliente aprueba la planificación. */}
+			<SectionCard
+				title="Modelos 3D"
+				action={
+					isApproved ? (
+						<Badge
+							variant="soft"
+							className="shrink-0 bg-emerald-100 text-emerald-900 dark:bg-emerald-400/15 dark:text-emerald-200"
+						>
+							<CheckCircle className="size-3" />
+							Aprobada
+						</Badge>
+					) : undefined
+				}
+			>
+				{isApproved ? (
+					<ModelGallery patientId={patient.id} />
+				) : (
+					<ModelsLockedFallback
+						canApprove={canApprove}
+						isPending={isApproving}
+						onApprove={onApprove}
+					/>
+				)}
 			</SectionCard>
 
 			<SectionCard title="Declaración jurada">

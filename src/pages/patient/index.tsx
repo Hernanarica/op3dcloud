@@ -1,5 +1,5 @@
 import { ArrowLeftIcon, PlusIcon, Share2Icon } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { Link } from "react-router";
 import { toast } from "sonner";
 import {
@@ -37,14 +37,31 @@ export default function Patients() {
 
 	// La planificación se carga acá porque la necesitan el resumen del caso,
 	// las acciones (PDF) y la pestaña de planificación.
-	const { data: planning, isLoading: isLoadingPlanning } =
-		useTreatmentPlanning(selectedPatient?.id ?? null);
+	const {
+		data: planning,
+		isLoading: isLoadingPlanning,
+		approve: approvePlanning,
+	} = useTreatmentPlanning(selectedPatient?.id ?? null);
+
+	const [isApproving, startApprove] = useTransition();
 
 	const handleCopyLink = () => {
 		if (!selectedPatient) return;
 		const url = `${window.location.origin}/planificacion/${selectedPatient.id}`;
 		navigator.clipboard.writeText(url);
 		toast.success("Link de planificación copiado");
+	};
+
+	const handleApprove = () => {
+		startApprove(async () => {
+			try {
+				await approvePlanning();
+				toast.success("Planificación aprobada");
+			} catch (error) {
+				console.error(error);
+				toast.error("No se pudo aprobar la planificación");
+			}
+		});
 	};
 
 	const filteredPatients = searchQuery.trim()
@@ -104,7 +121,7 @@ export default function Patients() {
 				{/* Panel de lista: acompaña el scroll de la página */}
 				<aside
 					className={cn(
-						"md:sticky md:top-4 md:col-span-5 md:max-h-[calc(100svh-3rem)] lg:col-span-4 xl:col-span-3",
+						"md:sticky md:top-4 md:col-span-5 md:max-h-[calc(100svh-var(--navbar-offset)-3rem)] lg:col-span-4 xl:col-span-3",
 						mobileView === "detail" ? "hidden md:block" : "block",
 					)}
 				>
@@ -174,10 +191,12 @@ export default function Patients() {
 												selectedPatient.planning_enabled &&
 												activeTab !== "planning"
 											}
+											isApproving={isApproving}
 											onViewPlanning={() =>
 												setActiveTab("planning")
 											}
 											onCopyLink={handleCopyLink}
+											onApprove={handleApprove}
 										/>
 									}
 								/>
@@ -204,7 +223,12 @@ export default function Patients() {
 									/>
 								)}
 								{activeTab === "details" && (
-									<PatientDetail patient={selectedPatient} />
+									<PatientDetail
+										patient={selectedPatient}
+										planning={planning}
+										isApproving={isApproving}
+										onApprove={handleApprove}
+									/>
 								)}
 								{activeTab === "planning" && (
 									<TreatmentPlanningView

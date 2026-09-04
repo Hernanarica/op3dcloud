@@ -73,7 +73,6 @@ supabase db push
   - `useUserStore` - User state with role management (persisted to localStorage)
   - `useThemeStore` - Theme preferences
   - `useModalStore` - Modal state management
-  - `useSidebarStore` - Sidebar state
   - `useDashboardAdminStore` - Admin dashboard state
 - **Router**: React Router v7 with role-based route guards
 
@@ -97,7 +96,7 @@ supabase db push
 - **Type Safety**: Auto-generated TypeScript types from Supabase schema
   - Custom type definitions in `src/types/db/` for specific domains (clients, patients, users/roles)
   - Unified `UserRole` type from `@/types/db/users/roles` used across the app
-- **State Management**: Zustand for global state (user, theme, modals, sidebar, dashboard)
+- **State Management**: Zustand for global state (user, theme, modals, dashboard)
   - User state persisted to localStorage for auth persistence
   - Role-based access controlled via `useUserRole` hook
 - **Form Handling**: React Hook Form with Zod validation

@@ -1,31 +1,43 @@
 import { CheckIcon, MinusIcon, SparklesIcon } from "lucide-react";
+import { motion, useReducedMotion } from "motion/react";
+import { useEffect, useState } from "react";
+import ReactCountryFlag from "react-country-flag";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { usePlans } from "@/hooks/swr/usePlans";
 import { cn } from "@/lib/utils";
 import {
 	buildPlans,
 	COMMON_INCLUSIONS,
-	formatUsd,
+	CURRENCY_COUNTRY_CODES,
+	CURRENCY_LABELS,
+	type CurrencyCode,
 	MASTER_FEATURES,
 	type Plan,
 } from "../plans.data";
 
 interface StepChoosePlanProps {
+	currency: CurrencyCode;
+	format: (usdValue: number) => string;
+	onCurrencyChange: (currency: CurrencyCode) => void;
 	onChoose: (plan: Plan) => void;
 }
 
 /** Precio grande con centavos chicos, reutilizado en tarjeta y banner. */
 function PriceTag({
 	value,
+	format,
 	highlighted = false,
 }: {
 	value: number;
+	format: (usdValue: number) => string;
 	highlighted?: boolean;
 }) {
-	const [whole, cents] = formatUsd(value).replace("USD ", "").split(",");
+	const [currencyLabel, amount] = format(value).split(" ");
+	const [whole, cents] = amount.split(",");
 	return (
 		<span className="flex items-baseline gap-1">
 			<span
@@ -36,7 +48,7 @@ function PriceTag({
 						: "text-muted-foreground",
 				)}
 			>
-				USD
+				{currencyLabel}
 			</span>
 			<span className="text-4xl font-bold tracking-tight tabular-nums">
 				{whole}
@@ -65,16 +77,58 @@ function PriceTag({
 	);
 }
 
+/** Variants del badge "% OFF": entra con spring y luego pulsa en loop. */
+function getBadgeVariants(index: number) {
+	return {
+		hidden: { opacity: 0, transform: "scale(0.5) rotate(-12deg)" },
+		enter: {
+			opacity: 1,
+			transform: "scale(1) rotate(0deg)",
+			transition: {
+				type: "spring" as const,
+				duration: 0.5,
+				bounce: 0.35,
+				delay: 0.15 + index * 0.06,
+			},
+		},
+		pulse: {
+			opacity: 1,
+			transform: [
+				"scale(1) rotate(0deg)",
+				"scale(1.05) rotate(0deg)",
+				"scale(1) rotate(0deg)",
+			],
+			transition: {
+				duration: 1.8,
+				ease: "easeInOut" as const,
+				repeat: Number.POSITIVE_INFINITY,
+				repeatDelay: 1.2,
+			},
+		},
+	};
+}
+
 function PlanCard({
 	plan,
 	regularPricePerCredit,
+	format,
 	onChoose,
+	index,
 }: {
 	plan: Plan;
 	regularPricePerCredit: number;
+	format: (usdValue: number) => string;
 	onChoose: (plan: Plan) => void;
+	index: number;
 }) {
 	const highlighted = Boolean(plan.label);
+	const reduceMotion = useReducedMotion();
+	const [stage, setStage] = useState<"hidden" | "enter" | "pulse">("hidden");
+	const badgeVariants = getBadgeVariants(index);
+
+	useEffect(() => {
+		setStage("enter");
+	}, []);
 
 	return (
 		<div
@@ -109,13 +163,22 @@ function PlanCard({
 				</div>
 				{plan.savingPercent != null && (
 					<Badge
+						asChild
 						variant="secondary"
-						className={cn(
-							"shrink-0",
-							highlighted && "bg-background/15 text-background",
-						)}
+						className="shrink-0 border-transparent bg-emerald-600 text-sm font-bold text-white dark:bg-emerald-500"
 					>
-						{plan.savingPercent}% OFF
+						<motion.span
+							variants={badgeVariants}
+							initial="hidden"
+							animate={reduceMotion ? "enter" : stage}
+							onAnimationComplete={(definition) => {
+								if (definition === "enter" && !reduceMotion) {
+									setStage("pulse");
+								}
+							}}
+						>
+							{plan.savingPercent}% OFF
+						</motion.span>
 					</Badge>
 				)}
 			</div>
@@ -131,11 +194,12 @@ function PlanCard({
 								: "text-muted-foreground",
 						)}
 					>
-						{formatUsd(regularPricePerCredit)}
+						{format(regularPricePerCredit)}
 					</p>
 				)}
 				<PriceTag
 					value={plan.pricePerCredit}
+					format={format}
 					highlighted={highlighted}
 				/>
 				<p
@@ -144,7 +208,7 @@ function PlanCard({
 						highlighted ? "text-background" : "text-foreground",
 					)}
 				>
-					{plan.total != null && `Total: ${formatUsd(plan.total)}`}
+					{plan.total != null && `Total: ${format(plan.total)}`}
 				</p>
 			</div>
 
@@ -186,7 +250,7 @@ function PlanCard({
 						highlighted ? "text-background" : "text-primary",
 					)}
 				>
-					Ahorrás {formatUsd(plan.savingAmount)}
+					Ahorrás {format(plan.savingAmount)}
 				</p>
 			) : (
 				<p
@@ -239,9 +303,11 @@ function PlanCard({
 
 function PartnerBanner({
 	plan,
+	format,
 	onChoose,
 }: {
 	plan: Plan;
+	format: (usdValue: number) => string;
 	onChoose: (plan: Plan) => void;
 }) {
 	return (
@@ -257,7 +323,7 @@ function PartnerBanner({
 				<p className="text-sm">
 					<span className="text-muted-foreground">Desde </span>
 					<span className="text-lg font-bold">
-						{formatUsd(plan.pricePerCredit)}
+						{format(plan.pricePerCredit)}
 					</span>
 					<span className="text-muted-foreground"> / crédito</span>
 				</p>
@@ -288,7 +354,12 @@ function PartnerBanner({
 	);
 }
 
-export default function StepChoosePlan({ onChoose }: StepChoosePlanProps) {
+export default function StepChoosePlan({
+	currency,
+	format,
+	onCurrencyChange,
+	onChoose,
+}: StepChoosePlanProps) {
 	const { plans: rows, isLoading } = usePlans();
 	const plans = buildPlans(rows);
 
@@ -309,6 +380,36 @@ export default function StepChoosePlan({ onChoose }: StepChoosePlanProps) {
 						compra única
 					</p>
 				</div>
+
+				<Tabs
+					value={currency}
+					onValueChange={(value) =>
+						onCurrencyChange(value as CurrencyCode)
+					}
+					className="items-center"
+				>
+					<TabsList>
+						{(Object.keys(CURRENCY_LABELS) as CurrencyCode[]).map(
+							(code) => (
+								<TabsTrigger
+									key={code}
+									value={code}
+									className="gap-1.5"
+								>
+									<ReactCountryFlag
+										countryCode={
+											CURRENCY_COUNTRY_CODES[code]
+										}
+										svg
+										style={{ width: "1em", height: "1em" }}
+										aria-hidden="true"
+									/>
+									{code}
+								</TabsTrigger>
+							),
+						)}
+					</TabsList>
+				</Tabs>
 
 				<div className="bg-muted/30 mx-auto max-w-3xl rounded-xl border p-5 text-left">
 					<p className="text-foreground mb-3 text-center text-sm font-semibold">
@@ -337,18 +438,24 @@ export default function StepChoosePlan({ onChoose }: StepChoosePlanProps) {
 								className="h-[520px] rounded-2xl"
 							/>
 						))
-					: creditPlans.map((plan) => (
+					: creditPlans.map((plan, index) => (
 							<PlanCard
 								key={plan.key}
 								plan={plan}
 								regularPricePerCredit={regularPricePerCredit}
+								format={format}
 								onChoose={onChoose}
+								index={index}
 							/>
 						))}
 			</div>
 
 			{partnerPlan && (
-				<PartnerBanner plan={partnerPlan} onChoose={onChoose} />
+				<PartnerBanner
+					plan={partnerPlan}
+					format={format}
+					onChoose={onChoose}
+				/>
 			)}
 		</div>
 	);

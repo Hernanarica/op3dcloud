@@ -1,14 +1,15 @@
 import { CheckCircle2Icon } from "lucide-react";
 import { useNavigate } from "react-router";
 import { Button } from "@/components/ui/button";
-import { formatUsd, type Plan } from "../plans.data";
+import type { Plan } from "../plans.data";
 
 interface StepDoneProps {
 	plan: Plan;
+	format: (usdValue: number) => string;
 	variant: "receipt" | "partner";
 }
 
-export default function StepDone({ plan, variant }: StepDoneProps) {
+export default function StepDone({ plan, format, variant }: StepDoneProps) {
 	const navigate = useNavigate();
 
 	const isPartner = variant === "partner";
@@ -45,7 +46,7 @@ export default function StepDone({ plan, variant }: StepDoneProps) {
 							Total
 						</span>
 						<span className="text-foreground text-sm font-medium">
-							{formatUsd(plan.total)}
+							{format(plan.total)}
 						</span>
 					</div>
 				)}

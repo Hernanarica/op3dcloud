@@ -6,10 +6,11 @@ import {
 	CardHeader,
 	CardTitle,
 } from "@/components/ui/card";
-import { formatUsd, type Plan } from "../plans.data";
+import type { Plan } from "../plans.data";
 
 interface StepConfirmProps {
 	plan: Plan;
+	format: (usdValue: number) => string;
 	onBack: () => void;
 	onConfirm: () => void;
 }
@@ -25,6 +26,7 @@ function SummaryRow({ label, value }: { label: string; value: string }) {
 
 export default function StepConfirm({
 	plan,
+	format,
 	onBack,
 	onConfirm,
 }: StepConfirmProps) {
@@ -54,12 +56,12 @@ export default function StepConfirm({
 						/>
 						<SummaryRow
 							label="Precio por crédito"
-							value={`${formatUsd(plan.pricePerCredit)} / crédito`}
+							value={`${format(plan.pricePerCredit)} / crédito`}
 						/>
 						{plan.savingAmount != null && (
 							<SummaryRow
 								label="Ahorro"
-								value={`${formatUsd(plan.savingAmount)}${
+								value={`${format(plan.savingAmount)}${
 									plan.savingPercent != null
 										? ` · ${plan.savingPercent}%`
 										: ""
@@ -72,7 +74,7 @@ export default function StepConfirm({
 							</span>
 							<span className="text-foreground text-lg font-bold">
 								{plan.total != null
-									? formatUsd(plan.total)
+									? format(plan.total)
 									: "A medida"}
 							</span>
 						</div>

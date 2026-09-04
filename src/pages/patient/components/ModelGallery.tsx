@@ -1,4 +1,4 @@
-import { Box, ChevronDown, Download } from "lucide-react";
+import { Box, Check, ChevronDown, Download } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -29,6 +29,43 @@ function formatCaseDate(iso: string): string {
 
 interface ModelGalleryProps {
 	patientId: number;
+}
+
+/**
+ * Los STL se listan recién cuando el cliente aprueba la planificación. Hasta
+ * entonces no se pide el bucket ni se firman URLs.
+ */
+export function ModelsLockedFallback({
+	canApprove,
+	isPending,
+	onApprove,
+}: {
+	canApprove: boolean;
+	isPending: boolean;
+	onApprove: () => void;
+}) {
+	return (
+		<div className="flex flex-col items-center gap-4 p-6 text-center">
+			<span className="grid size-16 place-items-center rounded-full bg-secondary">
+				<Box className="size-6 text-muted-foreground" />
+			</span>
+			<div className="space-y-2">
+				<h4 className="text-base font-semibold tracking-[-0.011em]">
+					Modelos 3D bloqueados
+				</h4>
+				<p className="max-w-sm text-sm leading-6 text-muted-foreground">
+					Los modelos 3D se habilitarán cuando apruebes la
+					planificación.
+				</p>
+			</div>
+			{canApprove ? (
+				<Button size="pill" disabled={isPending} onClick={onApprove}>
+					<Check className="size-4" />
+					{isPending ? "Aprobando..." : "Aprobar planificación"}
+				</Button>
+			) : null}
+		</div>
+	);
 }
 
 /**
