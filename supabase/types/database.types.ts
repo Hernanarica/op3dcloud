@@ -227,6 +227,8 @@ export type Database = {
       treatment_planning: {
         Row: {
           additional_observations: string | null
+          client_approved: boolean
+          client_approved_at: string | null
           commercial_potential: string[] | null
           complexity: string | null
           created_at: string
@@ -257,6 +259,8 @@ export type Database = {
         }
         Insert: {
           additional_observations?: string | null
+          client_approved?: boolean
+          client_approved_at?: string | null
           commercial_potential?: string[] | null
           complexity?: string | null
           created_at?: string
@@ -287,6 +291,8 @@ export type Database = {
         }
         Update: {
           additional_observations?: string | null
+          client_approved?: boolean
+          client_approved_at?: string | null
           commercial_potential?: string[] | null
           complexity?: string | null
           created_at?: string

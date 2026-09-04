@@ -1,6 +1,9 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
-import { getTreatmentPlanningByPatientId } from "@/services/supabase/treatment-planning.service";
+import {
+	approveTreatmentPlanning,
+	getTreatmentPlanningByPatientId,
+} from "@/services/supabase/treatment-planning.service";
 import type { Tables } from "@/types/db/database.types";
 
 export type TreatmentPlanningRow = Tables<
@@ -51,5 +54,19 @@ export function useTreatmentPlanning(patientId: number | null) {
 		};
 	}, [patientId]);
 
-	return { data, isLoading };
+	const approve = useCallback(async () => {
+		if (!data) {
+			throw new Error("No hay planificación para aprobar");
+		}
+
+		const updated = await approveTreatmentPlanning(data.id);
+		setData(updated);
+
+		// TODO: notificar por email que el cliente aprobó la planificación.
+		// Cuando se arme, seguir el patrón de sendPlanningEnabledEmail
+		// (src/services/supabase/email.service.ts): invocar una edge function
+		// con el mail del cliente y el nombre del paciente, sin bloquear la UI.
+	}, [data]);
+
+	return { data, isLoading, approve };
 }

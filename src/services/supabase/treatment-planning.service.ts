@@ -116,6 +116,15 @@ export async function updateTreatmentPlanning(
 	}
 }
 
+export async function approveTreatmentPlanning(
+	id: number,
+): Promise<TreatmentPlanningRow> {
+	return updateTreatmentPlanning(id, {
+		client_approved: true,
+		client_approved_at: new Date().toISOString(),
+	});
+}
+
 export async function deleteTreatmentPlanning(id: number): Promise<void> {
 	try {
 		const { error } = await supabase
